@@ -1,4 +1,5 @@
-mod count_distinct;
+// src/main.rs
+use solution1::count_distinct;
 
 fn main() {
     let input_str: &str = "a,b,cd,b,e,e,d,a";

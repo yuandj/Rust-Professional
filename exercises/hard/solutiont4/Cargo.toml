@@ -3,8 +3,14 @@ name = "solutiont4"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
+[lib]
+name = "solutiont4"
+path = "src/lib.rs"  # 确保指向正确的库入口文件
+
+[[bin]]
+name = "solutiont4"
+path = "src/main.rs"
 
 [[test]]
-name = "tests"
+name = "integration_tests"
 path = "src/tests.rs"

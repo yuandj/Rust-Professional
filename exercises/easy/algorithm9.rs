@@ -23,7 +23,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: vec![T::default()], // Use a dummy element at index 0
             comparator,
         }
     }
@@ -37,7 +37,9 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        self.sift_up(self.count);
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +59,40 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+
+        if right > self.count {
+            left
+        } else if (self.comparator)(&self.items[left], &self.items[right]) {
+            left
+        } else {
+            right
+        }
+    }
+
+    fn sift_up(&mut self, mut idx: usize) {
+        while idx > 1 {
+            let parent_idx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+                self.items.swap(idx, parent_idx);
+                idx = parent_idx;
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn sift_down(&mut self, mut idx: usize) {
+        while self.children_present(idx) {
+            let child_idx = self.smallest_child_idx(idx);
+            if (self.comparator)(&self.items[child_idx], &self.items[idx]) {
+                self.items.swap(child_idx, idx);
+                idx = child_idx;
+            } else {
+                break;
+            }
+        }
     }
 }
 
@@ -84,8 +118,24 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+
+        // Swap the root with the last element
+        let last_idx = self.count;
+        self.items.swap(1, last_idx);
+
+        // Remove the last element (original root)
+        let result = self.items.pop();
+        self.count -= 1;
+
+        // Sift down the new root to maintain heap property
+        if !self.is_empty() {
+            self.sift_down(1);
+        }
+
+        result
     }
 }
 
@@ -116,6 +166,7 @@ impl MaxHeap {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_empty_heap() {
         let mut heap = MaxHeap::new::<i32>();

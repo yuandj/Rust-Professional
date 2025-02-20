@@ -1,8 +1,5 @@
-// I AM NOT DONE
-
-mod district;
+mod district_processor;
 
 fn main() {
-    let provinces = district::count_provinces();
-    println!("provinces: {provinces}");
+    district_processor::process_districts();
 }

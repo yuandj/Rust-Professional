@@ -12,8 +12,15 @@
 use std::fmt::{self, Display, Formatter};
 
 pub fn is_palindrome(s: String) -> bool {
-    // TODO: Implement the logic to check if the string is a palindrome
-    false // Placeholder return value
+    // Normalize the string: convert to lowercase and filter out non-alphabetic characters
+    let normalized: String = s
+        .to_lowercase()
+        .chars()
+        .filter(|c| c.is_ascii_alphabetic())
+        .collect();
+
+    // Check if the normalized string is equal to its reverse
+    normalized == normalized.chars().rev().collect::<String>()
 }
 
 #[cfg(test)]
