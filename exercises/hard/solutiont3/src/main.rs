@@ -1,5 +1,5 @@
-mod district_processor;
+mod district;
 
 fn main() {
-    district_processor::process_districts();
+    district::process_districts();
 }
