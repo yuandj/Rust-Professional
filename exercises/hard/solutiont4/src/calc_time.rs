@@ -8,6 +8,10 @@ pub struct Date {
 }
 
 impl Date {
+    fn format(&self) -> String {
+        format!("{}-{:02}-{:02}", self.year, self.month, self.day)
+    }
+
     pub fn from_ymd(year: i32, month: i32, day: i32) -> Option<Date> {
         if month < 1 || month > 12 || day < 1 || day > 31 {
             return None;
@@ -150,7 +154,7 @@ fn date_to_thursday(date: Date) -> Date {
 
 fn get_spring_festival(year: i32) -> Date {
     match year {
-        2025 => Date::from_ymd(2025, 1, 29).unwrap(),
+        2025 => Date::from_ymd(2025, 1, 29).unwrap(), // 正确春节日期
         2026 => Date::from_ymd(2026, 2, 17).unwrap(),
         2027 => Date::from_ymd(2027, 2, 6).unwrap(),
         2028 => Date::from_ymd(2028, 1, 26).unwrap(),
@@ -172,20 +176,32 @@ fn days_until_spring(current: Date) -> i32 {
 pub fn next_a_stock_opening(current: Date) -> Date {
     let mut date = current.add_days(1);
     loop {
-        // 跳过周末
-        while date.iso_weekday() >= 6 {
+        // 跳过周末（周一至周五为交易日）
+        while date.iso_weekday() > 5 { // 6=周六,7=周日
             date = date.add_days(1);
         }
-        
-        // 检查当年春节
-        let spring_start = get_spring_festival(date.year);
-        let spring_end = spring_start.add_days(6); // 正月初六结束
-        if date >= spring_start && date <= spring_end {
-            date = spring_end.add_days(1); // 跳到初七
+
+        // 新增劳动节假期处理（假设放假5天：5月1日-5月5日）
+        if date.month == 5 && date.day >= 1 && date.day <= 5 {
+            date = Date::from_ymd(date.year, 5, 6).unwrap(); // 直接跳到5月6日
             continue;
         }
         
-        // 检查下一年春节（处理跨年情况）
+        // 新增元旦假期处理（1月1日）
+        if date.month == 1 && date.day == 1 {
+            date = date.add_days(1);
+            continue;
+        }
+        
+        // 检查春节假期（当前年份）
+        let spring_start = get_spring_festival(date.year);
+        let spring_end = spring_start.add_days(6);
+        if date >= spring_start && date <= spring_end {
+            date = spring_end.add_days(1);
+            continue;
+        }
+        
+        // 检查下一年春节（跨年情况）
         let next_spring = get_spring_festival(date.year + 1);
         let next_spring_end = next_spring.add_days(6);
         if date >= next_spring && date <= next_spring_end {
@@ -206,23 +222,21 @@ pub fn time_info(time: &str) -> String {
     let date = Date::from_ymd(year, month, day).unwrap();
 
     let day_of_year = date.day_of_year();
-    let days_left = if Date::is_leap_year(year) {
-        366 - day_of_year
-    } else {
-        365 - day_of_year
-    };
-
+    let days_left = if Date::is_leap_year(year) { 366 - day_of_year } else { 365 - day_of_year };
     let iso_week = iso_week_number(date);
     let weekday = date.iso_weekday();
-
     let spring_days = days_until_spring(date);
     let next_open_date = next_a_stock_opening(date);
-    let next_open_days = next_open_date.days_since(&date) - 1;
+    let next_open_days = next_open_date.days_since(&date) - 1; // 保持原逻辑正确
 
-    format!(
-        "{},{},{},{},{},{}",
-        iso_week, weekday, day_of_year, days_left, spring_days, next_open_days
-    )
+    // 调试输出
+    println!(
+        "Input: {} => 第{}周,周{},年天数{},剩余{},春节{},开盘日{} (差{}天)",
+        time, iso_week, weekday, day_of_year, days_left, spring_days, 
+        next_open_date.format(), next_open_days
+    );
+
+    format!("{},{},{},{},{},{}", iso_week, weekday, day_of_year, days_left, spring_days, next_open_days)
 }
 
 #[cfg(test)]
